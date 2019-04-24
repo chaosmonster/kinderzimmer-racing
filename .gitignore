@@ -1,0 +1,6 @@
+//dependencies and build targets
+node_modules/
+dist/
+
+// Editor stuff
+*.code-workspace
