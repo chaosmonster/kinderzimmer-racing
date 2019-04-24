@@ -5,6 +5,12 @@ const canvas = document.getElementById('playground');
 let car;
 let ctx;
 
+//collision stuff
+const COLLISION_MAP_PATH = "./assets/collision_map.svg";
+let collision_rects = [];
+let assetsLoaded = false;
+let collision_svg = new Image; // for debugging (and nothing else to see for now…)
+
 function tick(timestamp) {
     let progress = (timestamp - last_render)/15;
 
@@ -12,7 +18,7 @@ function tick(timestamp) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     update(progress);
-    draw(ctx);
+    draw();
 
     last_render = timestamp;
     window.requestAnimationFrame(tick);
@@ -24,6 +30,7 @@ function init(){
     }
     ctx = canvas.getContext('2d');
 
+    loadCollisionMap();
     setupControls();
 
     car = new Car(ctx, 100, 100, 0);
@@ -36,8 +43,44 @@ function update(prog){
     car.update(prog);
 }
 
-function draw(ctx){
+function draw(){
     car.draw(ctx);
+
+    if(assetsLoaded){
+        drawMap();
+    }
+}
+
+function drawMap(){
+    // for now only the collision map to be seen…
+    ctx.drawImage(collision_svg,0,0);
+}
+
+function loadCollisionMap(){
+    //get the objects to collide with from an SVG
+    let xhttp = new XMLHttpRequest();
+    xhttp.overrideMimeType('text/xml');
+
+    xhttp.addEventListener("load", collisionOnLoad);
+    xhttp.open("GET", COLLISION_MAP_PATH, false);
+    xhttp.send(null);
+
+    //easier than drawing and caching the rects from the SVG for now…
+    collision_svg.src = COLLISION_MAP_PATH;
+}
+
+function collisionOnLoad(){
+    //TODO: How to deal with mutliple assets to be loaded?
+    assetsLoaded = true;
+    let xml_collision_rects = this.responseXML.getElementsByTagName('rect');
+    for(let rect of xml_collision_rects){
+        collision_rects.push({
+            x:rect.x.baseVal.value,
+            y:rect.y.baseVal.value,
+            width:rect.width.baseVal.value,
+            height:rect.height.baseVal.value
+        });
+    };
 }
 
 ////////////////////////
